@@ -10,7 +10,7 @@ dict_info = {
     'Creation date': [],
     'Pubmed accession number': [],
     'Country': [],
-    'Host': [],  
+    'Host': [], 
     'Collection_date': [],
     'Nucleotide Sequence': []
 }
@@ -24,16 +24,18 @@ with open("sequence.gbc.xml", "r") as file:
     xml = minidom.parse(file) #parseando para criar o objeto xml dom
 
     general = xml.getElementsByTagName("INSDSeq")
-
+  
     for i in range(len(general)):
         locus = general[i].getElementsByTagName("INSDSeq_locus")[0].firstChild.data
         length = general[i].getElementsByTagName("INSDSeq_length")[0].firstChild.data
         update_date = general[i].getElementsByTagName('INSDSeq_update-date')[0].firstChild.data
         creation_date = general[i].getElementsByTagName('INSDSeq_create-date')[0].firstChild.data
-
+       
         qualifiers = {}
         qualifiers_names = general[i].getElementsByTagName("INSDQualifier_name")
         qualifiers_values = general[i].getElementsByTagName("INSDQualifier_value")
+        for name, value in zip(qualifiers_names, qualifiers_values):
+                qualifiers[name.firstChild.data] = value.firstChild.data.capitalize() 
 
         temp_info = {
             'Sequence': i + 1,
@@ -42,9 +44,9 @@ with open("sequence.gbc.xml", "r") as file:
             'Update date': update_date,
             'Creation date': creation_date,
             'Pubmed accession number': [], 
-            'Country': qualifiers.get("country", ""),
-            'Host': qualifiers.get("host", ""),
-            'Collection_date': qualifiers.get("collection_date", ""),
+            'Country': qualifiers.get("country", "N/A"),
+            'Host': qualifiers.get("host", "N/A"),
+            'Collection_date': qualifiers.get("collection_date", "N/A"),
             'Nucleotide Sequence': [] 
         }
 
@@ -52,42 +54,6 @@ with open("sequence.gbc.xml", "r") as file:
             'Locus': locus,
             'Pubmed accession number': []
         }
-
-        #pegando os 3 qualificadores específicos que variam de acordo com sequencia
-        for name, value in zip(qualifiers_names, qualifiers_values):
-                qualifiers[name.firstChild.data] = value.firstChild.data.capitalize()
-        
-        for n in range(len(qualifiers_names)):
-            v = n
-            auxCountry = auxHost = auxCollec = qualifiers_names[n].firstChild.data
-            existsCountry = existsHost = existsCollec = False
-            while(existsCountry != True):
-                if auxCountry != "country":
-                    existsCountry = False
-                else:
-                    existsCountry = True
-                    temp_info['Country'] = qualifiers_names[v].firstChild.data.capitalize()
-
-            while(existsHost != True):
-                if auxHost != "host":
-                    existsHost = False
-                else:
-                    existsHost = True
-                    temp_info['Host'] = qualifiers_names[v].firstChild.data.capitalize()
-            
-            while(existsCollec != True):
-                if auxCollec != "collection_date":
-                    existsCollec = False
-                else:
-                    existsCollec = True
-                    temp_info['Collection_date'] = qualifiers_names[v].firstChild.data
-
-        if existsCountry == False:
-            temp_info['Country'] = ["N/A"]
-        if existsHost == False: 
-            temp_info['Host'] = ["N/A"]
-        if existsCollec == False:
-             temp_info['Collection_date'] = ["N/A"]
 
         #as varias condicoes do codigo pubmed
         if general[i].getElementsByTagName('INSDReference_pubmed'):
@@ -101,7 +67,7 @@ with open("sequence.gbc.xml", "r") as file:
         if general[i].getElementsByTagName("INSDSeq_sequence"):
             nucleotides = general[i].getElementsByTagName("INSDSeq_sequence")[0].firstChild.data
             if len(nucleotides) >= 200:
-                temp_info['Nucleotide Sequence'].append(nucleotides.upper()) #verify here later
+                temp_info['Nucleotide Sequence'].append(nucleotides.upper())
             else:
                 temp_info['Nucleotide Sequence'] = ["N/A"]
 
@@ -126,7 +92,7 @@ dict_df = pd.DataFrame(dict_info)
 extra_df = pd.DataFrame(dict_extra)
 df_explode = extra_df.explode(column = 'Pubmed accession number')
 
-#salvando o DataFrame em um arquivo CSV e excel
+#salvando o DataFrame em um arquivo CSV (e excel, se quiser)
 dict_df.to_csv('collected_data.csv', index = False)
 df_explode.to_csv('pubmed_accessions.csv', index = False)
 #dict_df.to_excel('collected_data.xlsx', index = False)
@@ -137,7 +103,3 @@ more = pd.read_csv('pubmed_accessions.csv')
 print(dict_df) 
 print("\n\nDataFrame separado com os valores de locus e o codigo de acesso do pubmed")
 print(extra_df)
-
-
-
-
