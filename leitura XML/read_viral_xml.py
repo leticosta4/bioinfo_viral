@@ -20,8 +20,9 @@ dict_extra = {
     'Pubmed accession number': []
 }
 
+#adicionar o arquivo xml em questão
 with open("sequence.gbc.xml", "r") as file: 
-    xml = minidom.parse(file) #parseando para criar o objeto xml dom
+    xml = minidom.parse(file) 
 
     general = xml.getElementsByTagName("INSDSeq")
   
@@ -32,10 +33,15 @@ with open("sequence.gbc.xml", "r") as file:
         creation_date = general[i].getElementsByTagName('INSDSeq_create-date')[0].firstChild.data
        
         qualifiers = {}
-        qualifiers_names = general[i].getElementsByTagName("INSDQualifier_name")
+        qualifiers_names = general[i].getElementsByTagName("INSDQualifier_name") 
         qualifiers_values = general[i].getElementsByTagName("INSDQualifier_value")
+
+        #testando a existência de tags desses qualificadores sem valor, pode ter alguns numeros diferentes entre os names e os values
         for name, value in zip(qualifiers_names, qualifiers_values):
-                qualifiers[name.firstChild.data] = value.firstChild.data.capitalize() 
+            if name.firstChild is not None and value.firstChild is not None: 
+                qualifiers[name.firstChild.data] = value.firstChild.data.capitalize()     
+            else:
+                print("One or more elements has value as none")
 
         temp_info = {
             'Sequence': i + 1,
@@ -55,7 +61,7 @@ with open("sequence.gbc.xml", "r") as file:
             'Pubmed accession number': []
         }
 
-        #as varias condicoes do codigo pubmed
+        #a quantidade de códigos pubmed pode variar
         if general[i].getElementsByTagName('INSDReference_pubmed'):
             access = general[i].getElementsByTagName('INSDReference_pubmed')
             for code in access:
@@ -63,7 +69,7 @@ with open("sequence.gbc.xml", "r") as file:
         else:
             temp_info['Pubmed accession number'] = ["N/A"]
 
-        #pegando apenas sequencias com no minimo 200 nucleotideos
+        #pegando apenas sequências com no minimo 200 nucleotídeos
         if general[i].getElementsByTagName("INSDSeq_sequence"):
             nucleotides = general[i].getElementsByTagName("INSDSeq_sequence")[0].firstChild.data
             if len(nucleotides) >= 200:
@@ -86,20 +92,21 @@ with open("sequence.gbc.xml", "r") as file:
         dict_extra['Locus'].append(temp_info['Locus'])
         dict_extra['Pubmed accession number'].append(temp_info['Pubmed accession number'])
 
-#convertendo o dicionário em um DataFrame
-
+#convertendo os dicionários em DataFrames
 dict_df = pd.DataFrame(dict_info)
 extra_df = pd.DataFrame(dict_extra)
 df_explode = extra_df.explode(column = 'Pubmed accession number')
 
-#salvando o DataFrame em um arquivo CSV (e excel, se quiser)
-dict_df.to_csv('collected_data.csv', index = False)
-df_explode.to_csv('pubmed_accessions.csv', index = False)
+#salvando os DataFrames em arquivos CSV (e excel, se quiser)
+dict_df.to_csv('_collected_data.csv', index = False)
+df_explode.to_csv('_pubmed_codes.csv', index = False)
 #dict_df.to_excel('collected_data.xlsx', index = False)
-
-dados = pd.read_csv('collected_data.csv')
-more = pd.read_csv('pubmed_accessions.csv')
 
 print(dict_df) 
 print("\n\nDataFrame separado com os valores de locus e o codigo de acesso do pubmed")
 print(extra_df)
+
+
+
+
+
