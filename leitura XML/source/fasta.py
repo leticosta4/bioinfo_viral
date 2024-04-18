@@ -5,15 +5,17 @@ def slicing_genome(seq_especifica):
     nucleotides_slices = []
     for j in range(0, len(seq_especifica), 60):
         nucleotides_slices.append(seq_especifica[j:j+60])
+        #opção:  yield seq_especifica[j:j+60]
     return nucleotides_slices    
 
 def slicing_locus_and_sequence(locus_list, nuc_list):
     maximum_locus = []
     maximum_nuc = []
 
-    for ln in range(0, len(locus_list), 2000):
-        maximum_locus.append(locus_list[ln:ln+2000])
-        maximum_nuc.append(nuc_list[ln:ln+2000])
+    for ln in range(0, len(locus_list), 1999):
+        maximum_locus.append(locus_list[ln:ln+1999])
+        maximum_nuc.append(nuc_list[ln:ln+1999])
+        #opção:  yield locus_list[ln:ln+2000], nuc_list[ln:ln+2000]
     return zip(maximum_locus, maximum_nuc)
 
 def generate_fasta(df):
@@ -29,7 +31,7 @@ def generate_fasta(df):
         with open(f"data/processed/fasta_files/genome{index}.fasta", "w") as fasta_file:
 
             for locus, seq in zip(locus_portion, seq_portion):
-                genome = slicing_genome(seq)
+                genome = slicing_genome(seq)  #usando o yield eu teria que iterar aqui no objeto generator que ele retornaria
 
                 if(first_line):
                     fasta_file.write(">" + locus + "\n")
